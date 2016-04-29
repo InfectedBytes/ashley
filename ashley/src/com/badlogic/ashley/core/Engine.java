@@ -18,8 +18,7 @@ package com.badlogic.ashley.core;
 
 import com.badlogic.ashley.core.ComponentOperationHandler.BooleanInformer;
 import com.badlogic.ashley.core.SystemManager.SystemListener;
-import com.badlogic.ashley.signals.Listener;
-import com.badlogic.ashley.signals.Signal;
+import com.badlogic.ashley.signals.*;
 import com.badlogic.ashley.utils.ImmutableArray;
 
 /**
@@ -49,6 +48,18 @@ public class Engine {
 	private ComponentOperationHandler componentOperationHandler = new ComponentOperationHandler(new EngineDelayedInformer());
 	private FamilyManager familyManager = new FamilyManager(entityManager.getEntities());	
 	private boolean updating;
+
+	public final ComponentSignalMap componentAddedSignal = new ComponentSignalMap();
+	public final ComponentSignalMap componentRemovedSignal = new ComponentSignalMap();
+
+	private final ComponentSignalReceiver<Component> componentAddedListener = new ComponentSignalReceiver<Component>() {
+		@Override
+		public void receive(ComponentSignal<Component> signal, Entity entity, Component component) { componentAddedSignal.dispatch(component.getClass(), entity, component); }
+	};
+	private final ComponentSignalReceiver<Component> componentRemovedListener = new ComponentSignalReceiver<Component>() {
+		@Override
+		public void receive(ComponentSignal<Component> signal, Entity entity, Component component) { componentRemovedSignal.dispatch(component.getClass(), entity, component); }
+	};
 
 
 	/**
@@ -196,9 +207,19 @@ public class Engine {
 		entity.componentOperationHandler = componentOperationHandler;
 		
 		familyManager.updateFamilyMembership(entity);
+
+		entity.componentAddedSignal.add(componentAddedListener);
+		entity.componentRemovedSignal.add(componentRemovedListener);
+		for(Component component : entity.getComponents())
+			entity.componentAddedSignal.dispatch(entity, component);
 	}
 	
 	protected void removeEntityInternal(Entity entity) {
+		for(Component component : entity.getComponents())
+			entity.componentRemovedSignal.dispatch(entity, component);
+		entity.componentAddedSignal.remove(componentAddedListener);
+		entity.componentRemovedSignal.remove(componentRemovedListener);
+
 		familyManager.updateFamilyMembership(entity);
 
 		entity.componentAdded.remove(componentAdded);

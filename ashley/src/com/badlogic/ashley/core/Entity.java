@@ -16,6 +16,7 @@
 
 package com.badlogic.ashley.core;
 
+import com.badlogic.ashley.signals.ComponentSignal;
 import com.badlogic.ashley.signals.Signal;
 import com.badlogic.ashley.utils.Bag;
 import com.badlogic.ashley.utils.ImmutableArray;
@@ -33,6 +34,11 @@ public class Entity {
 	public final Signal<Entity> componentAdded;
 	/** Will dispatch an event when a component is removed. */
 	public final Signal<Entity> componentRemoved;
+
+	/** Used to notify the engine when a component was finally added */
+	ComponentSignal<Component> componentAddedSignal = new ComponentSignal<Component>();
+	/** Used to notify the engine when a component was finally removed */
+	ComponentSignal<Component> componentRemovedSignal = new ComponentSignal<Component>();
 
 	boolean scheduledForRemoval;
 	boolean removing;
@@ -174,7 +180,8 @@ public class Entity {
 		components.set(componentTypeIndex, component);
 		componentsArray.add(component);
 		componentBits.set(componentTypeIndex);
-		
+
+		componentAddedSignal.dispatch(this, component);
 		return true;
 	}
 
@@ -188,10 +195,12 @@ public class Entity {
 		Component removeComponent = components.get(componentTypeIndex);
 
 		if (removeComponent != null) {
+			componentRemovedSignal.dispatch(this, removeComponent);
+
 			components.set(componentTypeIndex, null);
 			componentsArray.removeValue(removeComponent, true);
 			componentBits.clear(componentTypeIndex);
-			
+
 			return true;
 		}
 		
