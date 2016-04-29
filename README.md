@@ -1,3 +1,15 @@
+This repository contains some additions in order to register engine wide component listener. 
+If you are using Box2D, you could use this to automatically destroy a body:
+```java
+engine.componentRemovedSignal.addListener(PhysicsBody.class, new ComponentSignalReceiver<PhysicsBody>() {
+    @Override
+    public void receive(ComponentSignal<PhysicsBody> signal, Entity entity, PhysicsBody component) {
+        box2DWorld.destroyBody(component.body);
+    }
+});
+```
+
+
 ![](http://i.imgur.com/w8oAC73.png?1)
 
 A tiny entity framework written in Java. It's inspired by frameworks like
