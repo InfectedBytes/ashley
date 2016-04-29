@@ -54,11 +54,17 @@ public class Engine {
 
 	private final ComponentSignalReceiver<Component> componentAddedListener = new ComponentSignalReceiver<Component>() {
 		@Override
-		public void receive(ComponentSignal<Component> signal, Entity entity, Component component) { componentAddedSignal.dispatch(component.getClass(), entity, component); }
+		public void receive(ComponentSignal<Component> signal, Entity entity, Component component) {
+			componentAddedSignal.dispatch(component.getClass(), entity, component);
+			componentAddedSignal.dispatch(Component.class, entity, component); // fire 'catch all' event
+		}
 	};
 	private final ComponentSignalReceiver<Component> componentRemovedListener = new ComponentSignalReceiver<Component>() {
 		@Override
-		public void receive(ComponentSignal<Component> signal, Entity entity, Component component) { componentRemovedSignal.dispatch(component.getClass(), entity, component); }
+		public void receive(ComponentSignal<Component> signal, Entity entity, Component component) {
+			componentRemovedSignal.dispatch(component.getClass(), entity, component);
+			componentRemovedSignal.dispatch(Component.class, entity, component); // fire 'catch all' event
+		}
 	};
 
 
